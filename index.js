@@ -39,12 +39,10 @@ bot.on('message', async (msg) => {
 
       await bot.sendMessage(chatId, 'Спасибо за обратную связь!')
       await bot.sendMessage(chatId, 'Ваша страна: ' + data?.country)
-
-      setTimeout(async () => {
-        await bot.sendMessage(chatId, 'Ваш город: ' + data?.city)
-      }, 1000)
+      await bot.sendMessage(chatId, 'Ваш город: ' + data?.city)
+      await bot,sendMessage(chatId, "Ваш пункт выдачи: " + data?.subject)
     } catch (e) {
-
+      await bot.sendMessage(chatIdm, 'Не удалось получить данные.')
     }
   }
 });
