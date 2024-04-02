@@ -1,9 +1,19 @@
-const TelegramBot = require('node-telegram-bot-api');
-const express = require('express');
+const TelegramBot = require('node-telegram-bot-api')
+const express = require('express')
 const cors = require('cors')
+require('dotenv/config.js')
 
-const token = '6591950258:AAGyn_U8qGuTbSe1U8EAdOlW9Drgk6sPPBU';
-const webAppUrl = 'https://master--endearing-crisp-db93ea.netlify.app';
+const token = process.env.TOKEN
+const webAppUrl = process.env.WEB_APP_URL
+const greeting = `🎉 Добро пожаловать в лучший магазин МТС в Карачаево-Черкесской республике! 🎉
+
+                  Только здесь вы найдете товары по самым выгодным ценам! 💰
+
+                  Мы рады приветствовать вас в нашем магазине и готовы предложить вам широкий ассортимент товаров и услуг по самым выгодным ценам. У нас вы найдете все, что нужно для связи, развлечений и работы.
+
+                  Наши опытные консультанты помогут вам подобрать оптимальный тарифный план, выбрать подходящий смартфон или подключить дополнительные услуги.
+
+                  Мы всегда рады видеть вас в нашем магазине! Приходите и убедитесь сами в наших выгодных ценах и высоком уровне обслуживания.`
 
 const bot = new TelegramBot(token, {polling: true});
 const app = express();
@@ -16,15 +26,15 @@ bot.on('message', async (msg) => {
   const text = msg.text;
 
   if (text == '/start') {
-    await bot.sendMessage(chatId, 'Ниже появится кнопка, заполни форму', {
-      reply_markup: {
-          keyboard: [
-              [{text: "Заполнить форму", web_app: {url: webAppUrl + '/form'}}]
-          ]
-      }
-  }) 
+  //   await bot.sendMessage(chatId, 'Ниже появится кнопка, заполни форму', {
+  //     reply_markup: {
+  //         keyboard: [
+  //             [{text: "Заполнить форму", web_app: {url: webAppUrl + '/form'}}]
+  //         ]
+  //     }
+  // }) 
 
-    await bot.sendMessage(chatId, 'Заходи в наш интернет магазин', {
+    await bot.sendMessage(chatId, greeting, {
         reply_markup: {
             inline_keyboard: [
                 [{text: "Сделать заказ", web_app: {url: webAppUrl}}]
@@ -40,9 +50,9 @@ bot.on('message', async (msg) => {
       await bot.sendMessage(chatId, 'Спасибо за обратную связь!')
       await bot.sendMessage(chatId, 'Ваша страна: ' + data?.country)
       await bot.sendMessage(chatId, 'Ваш город: ' + data?.city)
-      await bot,sendMessage(chatId, "Ваш пункт выдачи: " + data?.subject)
+      await bot.sendMessage(chatId, "Ваш пункт выдачи: " + data?.subject)
     } catch (e) {
-      await bot.sendMessage(chatIdm, 'Не удалось получить данные.')
+      await bot.sendMessage(chatId, 'Не удалось получить данные.')
     }
   }
 });
