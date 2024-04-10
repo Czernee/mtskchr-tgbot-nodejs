@@ -3,15 +3,12 @@ const express = require('express')
 const cors = require('cors')
 require('dotenv/config.js')
 
-const token = process.env.TOKEN
 const webAppUrl = process.env.WEB_APP_URL
 const greeting = `🎉 Добро пожаловать в лучший магазин МТС в Карачаево-Черкесской республике! 🎉
+                  \nТолько здесь вы найдете товары по самым выгодным ценам! 💰
+                  \nМы рады приветствовать вас в нашем магазине и готовы предложить вам широкий ассортимент товаров и услуг по самым выгодным ценам. У нас вы найдете все, что нужно для связи, развлечений и работы.`
 
-                  Только здесь вы найдете товары по самым выгодным ценам! 💰
-
-                  Мы рады приветствовать вас в нашем магазине и готовы предложить вам широкий ассортимент товаров и услуг по самым выгодным ценам. У нас вы найдете все, что нужно для связи, развлечений и работы.`
-
-const bot = new TelegramBot(token, {polling: true});
+const bot = new TelegramBot(process.env.TOKEN, {polling: true});
 const app = express();
 
 app.use(express.json());
@@ -26,7 +23,6 @@ function showCart(data) {
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
-  let messageRecieved = false
 
   if (text == '/start') {
     await bot.sendMessage(chatId, greeting, {
@@ -48,23 +44,27 @@ bot.on('message', async (msg) => {
       \n${date.toLocaleDateString() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds()} - Вы оформили заказ
       ${showCart(data)}`
     )
-      
     } catch (e) {
       await bot.sendMessage(chatId, 'Не удалось получить данные.')
     }
   }
-  
-  await bot.sendMessage(chatId, 'Ниже появится кнопка, заполни форму', {
+});
+
+/*bot.on('message', async(msg1) => {
+  const chatId = msg1.chat.id;
+  const text = msg1.text;
+
+  await bot.sendMessage(chatId, 'Заполните форму для оформления заказа', {
     reply_markup: {
         keyboard: [
             [{text: "Заполнить форму", web_app: {url: webAppUrl + '/form'}}]
         ]
-     }
+    }
   }) 
 
-  if (msg?.web_app_data?.data) {
+  if (msg1?.web_app_data?.data) {
     try {
-      const data = JSON.parse(msg?.web_app_data?.data)
+      const data = JSON.parse(msg1?.web_app_data?.data)
 
       await bot.sendMessage(chatId, 'Спасибо за обратную связь!')
       await bot.sendMessage(chatId, 'Ваша страна: ' + data?.country)
@@ -73,8 +73,8 @@ bot.on('message', async (msg) => {
     } catch (e) {
       await bot.sendMessage(chatId, 'Не удалось получить данные.')
     }
-  }
-});
+}
+})*/
 
 app.post('/web-data', async (req, res) => {
   const {queryId, products = [], totalPrice} = req.body;
