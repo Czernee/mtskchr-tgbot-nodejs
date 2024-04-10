@@ -17,18 +17,41 @@ const app = express();
 app.use(express.json());
 app.use(cors())
 
+function showCart(data) {
+  return data?.products?.map((product) => {
+    return `\n🔹${product.title} - ${product.price}₽`;
+  }).join('');
+}
+
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
+  let messageRecieved = false
 
   if (text == '/start') {
     await bot.sendMessage(chatId, greeting, {
         reply_markup: {
-            inline_keyboard: [
+            keyboard: [
                 [{text: "Сделать заказ", web_app: {url: webAppUrl}}]
             ]
         }
     }) 
+  }
+
+  if (msg?.web_app_data?.data) {
+    try {
+      const data = JSON.parse(msg?.web_app_data?.data)
+      let date = new Date()
+
+      await bot.sendMessage(chatId, 
+      `MTS.KCHR - Ваш заказ
+      \n${date.toLocaleDateString() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds()} - Вы оформили заказ
+      ${showCart(data)}`
+    )
+      
+    } catch (e) {
+      await bot.sendMessage(chatId, 'Не удалось получить данные.')
+    }
   }
   
   await bot.sendMessage(chatId, 'Ниже появится кнопка, заполни форму', {
@@ -69,7 +92,7 @@ app.post('/web-data', async (req, res) => {
     await bot.answerWebAppQuery(queryId, {
       type: 'article',
       id: queryId,
-      title: 'Успешная покупка',
+      title: 'Не удалось приобрести товар',
       input_message_content: {message_text: 'Не удалось приобрести товар'}
     })
     return res.status(500).json({});
