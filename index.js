@@ -27,6 +27,7 @@ bot.on('message', async (msg) => {
   if (text == '/start') {
     await bot.sendMessage(chatId, greeting, {
         reply_markup: {
+          resize_keyboard: true,
             keyboard: [
                 [{text: "Сделать заказ", web_app: {url: webAppUrl}}]
             ]
@@ -34,7 +35,7 @@ bot.on('message', async (msg) => {
     }) 
   }
 
-  if (msg?.web_app_data?.data) {
+  if (msg?.web_app_data?.button_text == "Сделать заказ") {
     try {
       const data = JSON.parse(msg?.web_app_data?.data)
       let date = new Date()
@@ -42,39 +43,62 @@ bot.on('message', async (msg) => {
       await bot.sendMessage(chatId, 
       `MTS.KCHR - Ваш заказ
       \n${date.toLocaleDateString() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds()} - Вы оформили заказ
-      ${showCart(data)}`
+      ${showCart(data)}`, {
+        reply_markup: {
+          inline_keyboard: [
+            [{text: "Продолжить", callback_data: 'botContinue'}], 
+            [{text: "Очистить корзину", callback_data: 'cartClean'}]
+          ]
+        }
+      }
     )
     } catch (e) {
-      await bot.sendMessage(chatId, 'Не удалось получить данные.')
+      await bot.sendMessage(chatId, `${e.message}`)
+    }
+  } else {
+    try {
+      const data = JSON.parse(msg?.web_app_data?.data)
+  
+        await bot.sendMessage(chatId, 
+          `Спасибо за обратную связь!
+          \nВаша страна: ${data?.country}
+          \nВаш город: ${data?.city}
+          \nВаш пункт выдачи: ${data?.subject}`)               
+    } catch (e) {
+      await bot.sendMessage(chatId, `${e.message}`)
     }
   }
 });
 
-/*bot.on('message', async(msg1) => {
-  const chatId = msg1.chat.id;
-  const text = msg1.text;
 
-  await bot.sendMessage(chatId, 'Заполните форму для оформления заказа', {
-    reply_markup: {
-        keyboard: [
-            [{text: "Заполнить форму", web_app: {url: webAppUrl + '/form'}}]
-        ]
+bot.on('callback_query', async (data, msg) => {
+  let chatId = data.message.chat.id;
+
+  if (data.data == "botContinue") {
+    await bot.sendMessage(chatId, 'Заполните форму для оформления заказа', {
+      reply_markup: {
+        resize_keyboard: true,
+          keyboard: [
+              [{text: "Заполнить форму", web_app: {url: webAppUrl + '/form'}}]
+          ]
+      }
+    }) 
+
+    if (msg?.web_app_data?.data) {
+      try {
+        console.log(msg)
+        /*const data = JSON.parse(msg?.web_app_data?.data)
+  
+        await bot.sendMessage(chatId, 'Спасибо за обратную связь!')
+        await bot.sendMessage(chatId, 'Ваша страна: ' + data?.country)
+        await bot.sendMessage(chatId, 'Ваш город: ' + data?.city)
+        await bot.sendMessage(chatId, "Ваш пункт выдачи: " + data?.subject)*/
+      } catch (e) {
+        await bot.sendMessage(chatId, 'Не удалось получить данные.')
+      }
     }
-  }) 
-
-  if (msg1?.web_app_data?.data) {
-    try {
-      const data = JSON.parse(msg1?.web_app_data?.data)
-
-      await bot.sendMessage(chatId, 'Спасибо за обратную связь!')
-      await bot.sendMessage(chatId, 'Ваша страна: ' + data?.country)
-      await bot.sendMessage(chatId, 'Ваш город: ' + data?.city)
-      await bot.sendMessage(chatId, "Ваш пункт выдачи: " + data?.subject)
-    } catch (e) {
-      await bot.sendMessage(chatId, 'Не удалось получить данные.')
-    }
-}
-})*/
+  }
+})
 
 app.post('/web-data', async (req, res) => {
   const {queryId, products = [], totalPrice} = req.body;
