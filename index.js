@@ -8,7 +8,7 @@ const greeting = `🎉 Добро пожаловать в лучший мага�
                   \nТолько здесь вы найдете товары по самым выгодным ценам! 💰
                   \nМы рады приветствовать вас в нашем магазине и готовы предложить вам широкий ассортимент товаров и услуг по самым выгодным ценам. У нас вы найдете все, что нужно для связи, развлечений и работы.`
 
-const bot = new TelegramBot(process.env.TOKEN, {polling: true});
+const bot = new TelegramBot(process.env.TG_BOT_TOKEN, {polling: true});
 const app = express();
 
 app.use(express.json());
@@ -23,6 +23,8 @@ function showCart(data) {
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
+  let products = []
+  let totalSum = 0
 
   if (text == '/start') {
     await bot.sendMessage(chatId, greeting, {
@@ -39,6 +41,7 @@ bot.on('message', async (msg) => {
     try {
       const data = JSON.parse(msg?.web_app_data?.data)
       let date = new Date()
+      console.log(msg.web_app_data)
 
       await bot.sendMessage(chatId, 
       `MTS.KCHR - Ваш заказ
@@ -61,9 +64,23 @@ bot.on('message', async (msg) => {
   
         await bot.sendMessage(chatId, 
           `Спасибо за обратную связь!
-          \nВаша страна: ${data?.country}
-          \nВаш город: ${data?.city}
-          \nВаш пункт выдачи: ${data?.subject}`)               
+          \nВаше имя: ${data?.name}
+          \nВаш номер телефона: ${data?.phoneNumber}
+          \nВаш пункт выдачи: ${data?.pickUpPoint}`)
+
+        await bot.sendInvoice(chatId, 'iphone 13 pro', "test description", 'payload', process.env.PAYMENT_TOKEN, 
+          'RUB', [
+            {
+              label: 'iphone 13 pro',
+              amount: 78000*100
+            }
+          ],
+          {
+          need_name: false,
+          need_phone_number: false,
+          is_flexible: true,
+          need_shipping_address: false
+          })         
     } catch (e) {
       await bot.sendMessage(chatId, `${e.message}`)
     }
@@ -71,11 +88,12 @@ bot.on('message', async (msg) => {
 });
 
 
-bot.on('callback_query', async (data, msg) => {
-  let chatId = data.message.chat.id;
+bot.on('callback_query', async (data) => {
+  const chatId = data.message.chat.id;
+  messageId = data.message.message_id;
 
   if (data.data == "botContinue") {
-    await bot.sendMessage(chatId, 'Заполните форму для оформления заказа', {
+    await bot.sendMessage(chatId, 'Заполните форму для оформления заказа ⬇️', {
       reply_markup: {
         resize_keyboard: true,
           keyboard: [
@@ -83,20 +101,9 @@ bot.on('callback_query', async (data, msg) => {
           ]
       }
     }) 
-
-    if (msg?.web_app_data?.data) {
-      try {
-        console.log(msg)
-        /*const data = JSON.parse(msg?.web_app_data?.data)
-  
-        await bot.sendMessage(chatId, 'Спасибо за обратную связь!')
-        await bot.sendMessage(chatId, 'Ваша страна: ' + data?.country)
-        await bot.sendMessage(chatId, 'Ваш город: ' + data?.city)
-        await bot.sendMessage(chatId, "Ваш пункт выдачи: " + data?.subject)*/
-      } catch (e) {
-        await bot.sendMessage(chatId, 'Не удалось получить данные.')
-      }
-    }
+  } else {
+    bot.deleteMessage(chatId, messageId)
+    await bot.sendMessage(chatId, 'Корзина очищена ✅') ;
   }
 })
 
