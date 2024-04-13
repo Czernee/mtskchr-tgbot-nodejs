@@ -6,7 +6,7 @@ require('dotenv/config.js')
 const webAppUrl = process.env.WEB_APP_URL
 const greeting = `🎉 Добро пожаловать в лучший магазин МТС в Карачаево-Черкесской республике! 🎉
                   \nТолько здесь вы найдете товары по самым выгодным ценам! 💰
-                  \nМы рады приветствовать вас в нашем магазине и готовы предложить вам широкий ассортимент товаров и услуг по самым выгодным ценам. У нас вы найдете все, что нужно для связи, развлечений и работы.`
+                  \nМы рады приветствовать вас в нашем магазине и готовы предложить широкий ассортимент товаров и услуг по самым выгодным ценам. У нас вы найдете все, что нужно для связи, развлечений и работы.`
 
 const bot = new TelegramBot(process.env.TG_BOT_TOKEN, {polling: true});
 const app = express();
@@ -20,11 +20,15 @@ function showCart(data) {
   }).join('');
 }
 
+let products = []
+let totalSum = 0
+let customerFCS = ''
+let customerPhone = ''
+let customerPickUpPoint = ''
+
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
-  let products = []
-  let totalSum = 0
 
   if (text == '/start') {
     await bot.sendMessage(chatId, greeting, {
@@ -41,7 +45,8 @@ bot.on('message', async (msg) => {
     try {
       const data = JSON.parse(msg?.web_app_data?.data)
       let date = new Date()
-      console.log(msg.web_app_data)
+      products = data.products
+      totalSum = data.totalPrice
 
       await bot.sendMessage(chatId, 
       `MTS.KCHR - Ваш заказ
@@ -61,28 +66,34 @@ bot.on('message', async (msg) => {
   } else {
     try {
       const data = JSON.parse(msg?.web_app_data?.data)
-  
-        await bot.sendMessage(chatId, 
-          `Спасибо за обратную связь!
-          \nВаше имя: ${data?.name}
-          \nВаш номер телефона: ${data?.phoneNumber}
-          \nВаш пункт выдачи: ${data?.pickUpPoint}`)
+      customerFCS = data?.name
+      customerPhone = data?.phoneNumber
+      customerPickUpPoint = data?.pickUpPoint
 
-        await bot.sendInvoice(chatId, 'iphone 13 pro', "test description", 'payload', process.env.PAYMENT_TOKEN, 
-          'RUB', [
-            {
-              label: 'iphone 13 pro',
-              amount: 78000*100
-            }
-          ],
+      console.log(data)
+      await bot.sendMessage(chatId, 
+        `Спасибо за обратную связь!
+        \nВаше имя: ${data?.name}
+        \nВаш номер телефона: ${data?.phoneNumber}
+        \nВаш пункт выдачи: ${data?.pickUpPoint}`)
+
+        const invoiceItems = products.map(product => ({
+          label: product.title,
+          amount: product.price * 100
+        }))
+
+        await bot.sendInvoice(chatId, 'Покупка', 'Оплата заказа', 'payload', process.env.PAYMENT_TOKEN, 
+          'RUB', invoiceItems,
           {
           need_name: false,
           need_phone_number: false,
-          is_flexible: true,
-          need_shipping_address: false
+          is_flexible: false,
+          need_shipping_address: false,
           })         
+
+          await bot.sendMessage(chatId, 'Если вдруг вы сделали ошибку в форме, то можете заполнить ее заново ⬇️')
     } catch (e) {
-      await bot.sendMessage(chatId, `${e.message}`)
+     // заглушка :)
     }
   }
 });
@@ -107,27 +118,31 @@ bot.on('callback_query', async (data) => {
   }
 })
 
-app.post('/web-data', async (req, res) => {
-  const {queryId, products = [], totalPrice} = req.body;
-  try {
-    await bot.answerWebAppQuery(queryId, {
-      type: 'article',
-      id: queryId,
-      title: 'Успешная покупка',
-      input_message_content: {message_text: 
-        `Поздравляю с покупкой, вы приобрели товар на сумму' + ${totalPrice}, ${products.map(item => item.title).join(', ')}`
-      }
-    })
-    return res.status(200).json({});
-  } catch (e) {
-    await bot.answerWebAppQuery(queryId, {
-      type: 'article',
-      id: queryId,
-      title: 'Не удалось приобрести товар',
-      input_message_content: {message_text: 'Не удалось приобрести товар'}
-    })
-    return res.status(500).json({});
-  }
+bot.on('pre_checkout_query', async (data) => {
+  await bot.answerPreCheckoutQuery(data.id, true)
+})
+
+bot.on('successful_payment', async (data) => {
+  chatId = data.chat.id 
+  console.log(data)
+
+  bot.deleteMessage(chatId, data.message_id-1)
+  bot.sendMessage(chatId, `Благодарим за покупку! Ваш чек:
+  \nТовары:${products.map(product => {
+    return ' ' + product.title
+  })}
+  \nИтоговая сумма: ${totalSum} рублей
+  \nФИО покупателя: ${customerFCS}
+  \nНомер телефона покупателя: ${customerPhone}
+  \nПункт выдачи: ${customerPickUpPoint}
+  \nПри получении товара не забудьте показать чек продавцу!`, {
+    reply_markup: {
+      resize_keyboard: true,
+        keyboard: [
+            [{text: "Сделать заказ", web_app: {url: webAppUrl}}]
+        ]
+    }
+  })
 })
 
 const PORT = 8000;
