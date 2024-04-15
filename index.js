@@ -29,6 +29,7 @@ let customerPickUpPoint = ''
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
+  console.log(msg)
 
   if (text == '/start') {
     await bot.sendMessage(chatId, greeting, {
@@ -61,9 +62,9 @@ bot.on('message', async (msg) => {
       }
     )
     } catch (e) {
-      await bot.sendMessage(chatId, `${e.message}`)
+      await bot.sendMessage(chatId, `Не удалось получить данные.\nОшибка: ${e.message}`)
     }
-  } else {
+  } else if (msg?.web_app_data?.button_text == "Заполнить форму")  {
     try {
       const data = JSON.parse(msg?.web_app_data?.data)
       customerFCS = data?.name
@@ -93,7 +94,7 @@ bot.on('message', async (msg) => {
 
           await bot.sendMessage(chatId, 'Если вдруг вы сделали ошибку в форме, то можете заполнить ее заново ⬇️')
     } catch (e) {
-     // заглушка :)
+      bot.sendMessage(chatId, `Не удалось получить данные.\nОшибка: ${e.message}`)
     }
   }
 });
@@ -143,6 +144,7 @@ bot.on('successful_payment', async (data) => {
         ]
     }
   })
+  await bot.forwardMessage('@bruhdredd', '@mtskchrTestNodeJSBot', data.message_id)
 })
 
 const PORT = 8000;
