@@ -8,16 +8,16 @@ const greeting = `🎉 Добро пожаловать в лучший мага�
                   \nТолько здесь вы найдете товары по самым выгодным ценам! 💰
                   \nМы рады приветствовать вас в нашем магазине и готовы предложить широкий ассортимент товаров и услуг по самым выгодным ценам. У нас вы найдете все, что нужно для связи, развлечений и работы.`
 
-const bot = new TelegramBot(process.env.TG_BOT_TOKEN, {polling: true});
-const app = express();
+const bot = new TelegramBot(process.env.TG_BOT_TOKEN, {polling: true})
+const app = express()
 
-app.use(express.json());
+app.use(express.json())
 app.use(cors())
 
 function showCart(data) {
   return data?.products?.map((product) => {
     return `\n🔹${product.title} - ${product.price}₽`;
-  }).join('');
+  }).join('')
 }
 
 let products = []
@@ -27,8 +27,9 @@ let customerPhone = ''
 let customerPickUpPoint = ''
 
 bot.on('message', async (msg) => {
-  const chatId = msg.chat.id;
-  const text = msg.text;
+  console.log(msg)
+  const chatId = msg.chat.id
+  const text = msg.text
   console.log(msg)
 
   if (text == '/start') {
@@ -62,7 +63,7 @@ bot.on('message', async (msg) => {
       }
     )
     } catch (e) {
-      await bot.sendMessage(chatId, `Не удалось получить данные.\nОшибка: ${e.message}`)
+      bot.sendMessage(chatId, `Не удалось получить данные.\nОшибка: ${e.message}. Попробуйте перезапустить бота командой /start`)
     }
   } else if (msg?.web_app_data?.button_text == "Заполнить форму")  {
     try {
@@ -94,7 +95,7 @@ bot.on('message', async (msg) => {
 
           await bot.sendMessage(chatId, 'Если вдруг вы сделали ошибку в форме, то можете заполнить ее заново ⬇️')
     } catch (e) {
-      bot.sendMessage(chatId, `Не удалось получить данные.\nОшибка: ${e.message}`)
+      bot.sendMessage(chatId, `Не удалось получить данные.\nОшибка: ${e.message}. Попробуйте перезапустить бота командой /start`)
     }
   }
 });
@@ -124,29 +125,33 @@ bot.on('pre_checkout_query', async (data) => {
 })
 
 bot.on('successful_payment', async (data) => {
-  chatId = data.chat.id 
-  console.log(data)
+  const chatId = data.chat.id 
 
-  bot.deleteMessage(chatId, data.message_id-1)
-  bot.sendMessage(chatId, `Благодарим за покупку! Ваш чек:
-  \nТовары:${products.map(product => {
-    return ' ' + product.title
-  })}
-  \nИтоговая сумма: ${totalSum} рублей
-  \nФИО покупателя: ${customerFCS}
-  \nНомер телефона покупателя: ${customerPhone}
-  \nПункт выдачи: ${customerPickUpPoint}
-  \nПри получении товара не забудьте показать чек продавцу!`, {
-    reply_markup: {
-      resize_keyboard: true,
-        keyboard: [
-            [{text: "Сделать заказ", web_app: {url: webAppUrl}}]
-        ]
-    }
-  })
-  await bot.forwardMessage('@bruhdredd', '@mtskchrTestNodeJSBot', data.message_id)
+  try {
+    await bot.deleteMessage(chatId, data.message_id-2)
+    await bot.sendMessage(chatId, `Благодарим за покупку! Ваш чек:
+    \nТовары:${products.map(product => {
+      return ' ' + product.title
+    })}
+    \nИтоговая сумма: ${totalSum} рублей
+    \nФИО покупателя: ${customerFCS}
+    \nНомер телефона покупателя: ${customerPhone}
+    \nПункт выдачи: ${customerPickUpPoint}
+    \nПри получении товара не забудьте показать чек продавцу!`, {
+      reply_markup: {
+        resize_keyboard: true,
+          keyboard: [
+              [{text: "Сделать заказ", web_app: {url: webAppUrl}}]
+          ]
+      }
+    })
+    await bot.forwardMessage(1142417789, chatId, data.message_id+1)
+    await bot.forwardMessage(414819266, chatId, data.message_id+1)
+  } catch (e) {
+    bot.sendMessage(chatId, `Не удалось получить данные.\nОшибка: ${e.message}. Попробуйте перезапустить бота командой /start`)
+  }
 })
 
 const PORT = 8000;
 
-app.listen(PORT, () => console.log('server has been started on PORT ' + PORT))
+app.listen(PORT, () => console.log('Server has been started on PORT ' + PORT))
