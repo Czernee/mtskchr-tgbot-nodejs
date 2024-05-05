@@ -148,7 +148,7 @@ bot.on('successful_payment', async (data) => {
     await bot.forwardMessage(1142417789, chatId, data.message_id+1)
     await bot.forwardMessage(414819266, chatId, data.message_id+1)
   } catch (e) {
-    bot.sendMessage(chatId, `Не удалось получить данные.\nОшибка: ${e.message}. Попробуйте перезапустить бота командой /start`)
+    bot.sendMessage(chatId, `Не удалось выдать чек. Напишите сюда: @bruhdredd.\nОшибка: ${e.message}.`)
   }
 })
 
