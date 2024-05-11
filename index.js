@@ -148,7 +148,7 @@ bot.on('successful_payment', async (data) => {
   } catch (e) {
     bot.sendMessage(chatId, `Не удалось выдать чек. Напишите сюда: @bruhdredd.\nОшибка: ${e.message}.`)
   }
-})
+})//123
 
 const PORT = 8000;
 
