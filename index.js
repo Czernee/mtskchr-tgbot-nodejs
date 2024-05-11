@@ -27,10 +27,8 @@ let customerPhone = ''
 let customerPickUpPoint = ''
 
 bot.on('message', async (msg) => {
-  console.log(msg)
   const chatId = msg.chat.id
   const text = msg.text
-  console.log(msg)
 
   if (text == '/start') {
     await bot.sendMessage(chatId, greeting, {
@@ -72,7 +70,6 @@ bot.on('message', async (msg) => {
       customerPhone = data?.phoneNumber
       customerPickUpPoint = data?.pickUpPoint
 
-      console.log(data)
       await bot.sendMessage(chatId, 
         `Спасибо за обратную связь!
         \nВаше имя: ${data?.name}
@@ -125,6 +122,7 @@ bot.on('pre_checkout_query', async (data) => {
 })
 
 bot.on('successful_payment', async (data) => {
+  console.log(data)
   const chatId = data.chat.id 
 
   try {
