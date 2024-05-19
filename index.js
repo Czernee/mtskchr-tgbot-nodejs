@@ -27,6 +27,7 @@ let customerPhone = ''
 let customerPickUpPoint = ''
 
 bot.on('message', async (msg) => {
+  console.log(msg.chat.id)
   const chatId = msg.chat.id
   const text = msg.text
 
@@ -143,7 +144,7 @@ bot.on('successful_payment', async (data) => {
           ]
       }
     })
-    await bot.forwardMessage(1142417789, chatId, data.message_id+1)
+    await bot.forwardMessage(1042880988, chatId, data.message_id+1)
     await bot.forwardMessage(414819266, chatId, data.message_id+1)
   } catch (e) {
     bot.sendMessage(chatId, `Не удалось выдать чек. Напишите сюда: @bruhdredd.\nОшибка: ${e.message}.`)
