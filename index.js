@@ -27,7 +27,6 @@ let customerPhone = ''
 let customerPickUpPoint = ''
 
 bot.on('message', async (msg) => {
-  console.log(msg.chat.id)
   const chatId = msg.chat.id
   const text = msg.text
 
