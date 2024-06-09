@@ -92,6 +92,7 @@ bot.on('message', async (msg) => {
 
           await bot.sendMessage(chatId, 'Если вдруг вы сделали ошибку в форме, то можете заполнить ее заново ⬇️')
     } catch (e) {
+      console.log(e)
       bot.sendMessage(chatId, `Не удалось получить данные.\nОшибка: ${e.message}. Попробуйте перезапустить бота командой /start`)
     }
   }
@@ -113,7 +114,17 @@ bot.on('callback_query', async (data) => {
     }) 
   } else {
     bot.deleteMessage(chatId, messageId)
-    await bot.sendMessage(chatId, 'Корзина очищена ✅') ;
+    await bot.sendMessage(chatId, 'Корзина очищена ✅', 
+    {
+      reply_markup: {
+        resize_keyboard: true,
+          keyboard: [
+              [{text: "Сделать заказ", web_app: {url: webAppUrl}}]
+          ]
+      }
+    }
+    );
+    
   }
 })
 
