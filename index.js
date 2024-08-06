@@ -31,6 +31,7 @@ bot.on('message', async (msg) => {
   const text = msg.text
 
   if (text == '/start') {
+    console.log(`Новый пользователь: Имя: ${msg.chat.first_name}, Ник: ${msg.chat.username}, Айди: ${msg.chat.id} `)
     await bot.sendMessage(chatId, greeting, {
         reply_markup: {
           resize_keyboard: true,
